@@ -10,9 +10,32 @@ class GameScreen(QWidget):
 
     def __init__(self):
         super().__init__()
+
+        # Estado de la partida
         self.data_visible = False
-        self.current_player = "Jugador 1"
+        self.current_player = 1
+
+        # Puntuaciones
+        self.scores = {1: 0, 2: 0}
+
+        # Datos de los jugadores
+        self.player_data = {
+            1: {"x": 3.5, "y": 2.0},
+            2: {"x": -2.0, "y": 4.0}
+        }
+
+        # Jugadores activos
+        self.active_players = [1, 2]
+
+        # Historial de funciones
+        self.function_history = [
+            "f(x) = x²",
+            "f(x) = 2x + 1",
+            "f(x) = x³ - 2x"
+        ]
+
         self.create_interface()
+
 
     def create_interface(self):
         main_layout = QVBoxLayout(self)
@@ -24,6 +47,8 @@ class GameScreen(QWidget):
 
         self.reveal_button = QPushButton("REVELAR DATOS")
         self.reveal_button.clicked.connect(self.reveal_data)
+        self.end_turn_button = QPushButton("FINALIZAR TURNO")
+        self.end_turn_button.clicked.connect(self.end_turn)
 
         self.turn_label = QLabel("TURNO: JUGADOR 1")
         self.score_label = QLabel("P1: 0   |   P2: 0")
@@ -31,6 +56,7 @@ class GameScreen(QWidget):
         self.score_label.setObjectName("scoreLabel")
 
         top_layout.addWidget(self.reveal_button)
+        top_layout.addWidget(self.end_turn_button)
         top_layout.addStretch()
         top_layout.addWidget(self.turn_label)
         top_layout.addStretch()
@@ -95,12 +121,7 @@ class GameScreen(QWidget):
         history_panel.setMinimumHeight(160)
 
         self.history_list = QListWidget()
-
-        self.history_list.addItems([
-            "f(x) = x²",
-            "f(x) = 2x + 1",
-            "f(x) = x³ - 2x"
-        ])
+        self.history_list.addItems(self.function_history)
 
         history_panel.layout().addWidget(self.history_list)
 
@@ -134,43 +155,74 @@ class GameScreen(QWidget):
         bottom_layout.addWidget(interpolation_panel, stretch=1)
 
         main_layout.addLayout(bottom_layout, stretch=1)
+        
+        self.update_score_display()
+        self.update_turn_display()
+        self.update_players_display()
 
     # Funciones Auxiliares
     def create_panel(self, title):
         panel = QFrame()
         panel.setObjectName("gamePanel")
-
         layout = QVBoxLayout(panel)
         layout.setContentsMargins(12, 12, 12, 12)
         layout.setSpacing(10)
-
         title_label = QLabel(title)
         title_label.setObjectName("panelTitle")
         title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
         layout.addWidget(title_label)
-
         return panel
+
+    # Mostrar las puntuaciones actuales
+    def update_score_display(self):
+        self.score_label.setText(f"P1: {self.scores[1]}   |   P2: {self.scores[2]}")
+
+    # Mostrar el jugador que tiene el turno
+    def update_turn_display(self):
+        self.turn_label.setText(f"TURNO: JUGADOR {self.current_player}")
+
+    # Mostrar cuántos jugadores siguen activos
+    def update_players_display(self):
+        count = len(self.active_players)
+        self.players_label.setText(f"{count} jugadores vivos")
 
     def reveal_data(self):
         self.data_visible = not self.data_visible
-
         if self.data_visible:
+            # Obtener los datos del jugador actual
+            data = self.player_data[self.current_player]
             self.data_label.setText(
-                "Jugador 1\n\n"
+                f"JUGADOR {self.current_player}\n\n"
                 "Coordenadas:\n"
-                "X: 3.5\n"
-                "Y: 2.0"
-            )
-
+                f"X: {data['x']}\n"
+                f"Y: {data['y']}")
             self.reveal_button.setText("OCULTAR DATOS")
-
         else:
-            self.data_label.setText(
-                "Datos ocultos.\nPresiona Revelar datos."
-            )
-
+            self.data_label.setText("Datos ocultos.\nPresiona Revelar datos.")
             self.reveal_button.setText("REVELAR DATOS")
+    
+    
+    def end_turn(self):
+
+        # Comprobar que existan jugadores activos
+        if not self.active_players:
+            return
+
+        # Determinar el siguiente jugador activo
+        if self.current_player in self.active_players:
+            current_index = self.active_players.index(self.current_player)
+            next_index = (current_index + 1) % len(self.active_players)
+            self.current_player = self.active_players[next_index]
+        else:
+            self.current_player = self.active_players[0]
+
+        # Ocultar los datos del turno anterior
+        self.data_visible = False
+        self.data_label.setText("Datos ocultos.\nPresiona Revelar datos.")
+        self.reveal_button.setText("REVELAR DATOS")
+
+        # Actualizar la información del turno
+        self.update_turn_display()
 
     def attack(self):
         QMessageBox.information(
