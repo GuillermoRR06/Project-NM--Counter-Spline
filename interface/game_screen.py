@@ -177,6 +177,15 @@ class GameScreen(QWidget):
     def update_score_display(self):
         self.score_label.setText(f"P1: {self.scores[1]}   |   P2: {self.scores[2]}")
 
+    def add_points(self, player, points):
+        # Comprobar que el jugador exista
+        if player not in self.scores:
+            return
+        # Actualizar la puntuación
+        self.scores[player] += points
+        # Actualizar el marcador en pantalla
+        self.update_score_display()
+
     # Mostrar el jugador que tiene el turno
     def update_turn_display(self):
         self.turn_label.setText(f"TURNO: JUGADOR {self.current_player}")
@@ -185,6 +194,27 @@ class GameScreen(QWidget):
     def update_players_display(self):
         count = len(self.active_players)
         self.players_label.setText(f"{count} jugadores vivos")
+
+    def eliminate_player(self, player_id):
+        # Comprobar que el jugador siga activo
+        if player_id not in self.active_players:
+            return
+        # Eliminar al jugador de la lista
+        self.active_players.remove(player_id)
+        # Actualizar la cantidad de jugadores
+        self.update_players_display()
+        # Si el jugador eliminado tenía el turno, seleccionar al primer jugador que siga activo
+        if player_id == self.current_player:
+            self.data_visible = False
+            self.data_label.setText("Datos ocultos.\nPresiona Revelar datos.")
+            self.reveal_button.setText("REVELAR DATOS")
+            if self.active_players:
+                self.current_player = self.active_players[0]
+                self.update_turn_display()
+            else:
+                self.turn_label.setText("PARTIDA FINALIZADA")
+                self.end_turn_button.setDisabled(True)
+                self.reveal_button.setDisabled(True)
 
     def reveal_data(self):
         self.data_visible = not self.data_visible
@@ -200,29 +230,32 @@ class GameScreen(QWidget):
         else:
             self.data_label.setText("Datos ocultos.\nPresiona Revelar datos.")
             self.reveal_button.setText("REVELAR DATOS")
-    
-    
+
     def end_turn(self):
-
-        # Comprobar que existan jugadores activos
-        if not self.active_players:
+        if len(self.active_players) <= 1:
             return
-
-        # Determinar el siguiente jugador activo
         if self.current_player in self.active_players:
             current_index = self.active_players.index(self.current_player)
             next_index = (current_index + 1) % len(self.active_players)
             self.current_player = self.active_players[next_index]
         else:
             self.current_player = self.active_players[0]
-
         # Ocultar los datos del turno anterior
         self.data_visible = False
         self.data_label.setText("Datos ocultos.\nPresiona Revelar datos.")
         self.reveal_button.setText("REVELAR DATOS")
-
-        # Actualizar la información del turno
         self.update_turn_display()
+    
+    def add_function_to_history(self, function_text):
+        # Evitar agregar textos vacíos
+        if not function_text.strip():
+            return
+        # Guardar la función en la lista de datos
+        self.function_history.append(function_text)
+        # Mostrarla en el historial de la interfaz
+        self.history_list.addItem(function_text)
+        # Seleccionar automáticamente la última función
+        self.history_list.setCurrentRow(self.history_list.count() - 1)
 
     def attack(self):
         QMessageBox.information(
