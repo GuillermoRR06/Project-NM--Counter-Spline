@@ -1,7 +1,7 @@
 from PySide6.QtWidgets import (
     QWidget, QLabel, QPushButton, QListWidget,
     QVBoxLayout, QHBoxLayout, QGridLayout,
-    QFrame, QMessageBox)
+    QFrame, QMessageBox, QSizePolicy)
 from PySide6.QtCore import Qt
 from interface.graph_widget import GraphWidget
 
@@ -27,6 +27,8 @@ class GameScreen(QWidget):
 
         self.turn_label = QLabel("TURNO: JUGADOR 1")
         self.score_label = QLabel("P1: 0   |   P2: 0")
+        self.turn_label.setObjectName("turnLabel")
+        self.score_label.setObjectName("scoreLabel")
 
         top_layout.addWidget(self.reveal_button)
         top_layout.addStretch()
@@ -42,22 +44,31 @@ class GameScreen(QWidget):
 
         # Panel de datos
         self.data_panel = self.create_panel("DATOS")
+        self.data_panel.setMinimumWidth(190)
+        self.data_panel.setSizePolicy(
+            QSizePolicy.Policy.Preferred,
+            QSizePolicy.Policy.Expanding)
 
-        self.data_label = QLabel(
-            "Datos ocultos.\nPresiona Revelar datos."
-        )
+        self.data_label = QLabel("Datos ocultos.\nPresiona Revelar datos.")
+        self.data_label.setObjectName("dataLabel")
 
         self.data_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.data_panel.layout().addWidget(self.data_label)
 
         # Gráfico
         graph_panel = self.create_panel("MAPEO DE FUNCIONES")
+        graph_panel.setMinimumHeight(340)
 
         self.graph = GraphWidget()
+        self.graph.setMinimumHeight(280)
+        self.graph.setSizePolicy(
+            QSizePolicy.Policy.Expanding,
+            QSizePolicy.Policy.Expanding)
         graph_panel.layout().addWidget(self.graph)
 
         # Botón atacar
         attack_panel = self.create_panel("ATAQUE")
+        attack_panel.setMinimumWidth(190)
 
         self.attack_button = QPushButton("ATACAR")
         self.attack_button.clicked.connect(self.attack)
@@ -76,11 +87,12 @@ class GameScreen(QWidget):
 
         # Parte inferior
         bottom_layout = QHBoxLayout()
+        bottom_layout.setSpacing(12)
 
         # Historial
-        history_panel = self.create_panel(
-            "HISTORIAL DE FUNCIONES"
-        )
+        history_panel = self.create_panel("HISTORIAL DE FUNCIONES")
+        history_panel.setMinimumWidth(300)
+        history_panel.setMinimumHeight(160)
 
         self.history_list = QListWidget()
 
@@ -93,11 +105,11 @@ class GameScreen(QWidget):
         history_panel.layout().addWidget(self.history_list)
 
         # Jugadores activos
-        players_panel = self.create_panel(
-            "JUGADORES ACTIVOS"
-        )
+        players_panel = self.create_panel("JUGADORES ACTIVOS")
+        players_panel.setMinimumHeight(160)
 
         self.players_label = QLabel("2 jugadores vivos")
+        self.players_label.setObjectName("playersLabel")
         self.players_label.setAlignment(
             Qt.AlignmentFlag.AlignCenter
         )
@@ -105,9 +117,8 @@ class GameScreen(QWidget):
         players_panel.layout().addWidget(self.players_label)
 
         # Interpolar
-        interpolation_panel = self.create_panel(
-            "INTERPOLACION"
-        )
+        interpolation_panel = self.create_panel("INTERPOLACION")
+        interpolation_panel.setMinimumHeight(160)
 
         self.interpolate_button = QPushButton("INTERPOLAR")
         self.interpolate_button.clicked.connect(
